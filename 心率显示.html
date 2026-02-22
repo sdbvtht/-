@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>心率显示</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #ff4757;
+            --highlight-color: #ff6b81;
+        }
+        
+        body, html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: transparent;
+        }
+        
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+        
+        .heart-icon {
+            display: inline-block;
+            color: var(--primary-color);
+            font-size: 60px;
+            margin-right: 15px;
+            animation: heartbeat 1.5s infinite;
+            vertical-align: middle;
+        }
+        
+        .heart-rate {
+            display: inline-block;
+            font-size: 80px;
+            font-weight: bold;
+            color: var(--highlight-color);
+            text-shadow: 0 0 10px rgba(255, 107, 129, 0.7);
+            vertical-align: middle;
+        }
+        
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.1); }
+            50% { transform: scale(1); }
+            75% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="heart-icon">
+            <i class="fas fa-heart"></i>
+        </div>
+        <div class="heart-rate" id="currentRate">--</div>
+    </div>
+    
+    <script>
+        const accessCode = 'XPH5qChgcd';
+        let ws = null;
+        
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const host = window.location.host;
+            
+            ws = new WebSocket(`${protocol}${host}/ws`);
+            
+            ws.onopen = function() {
+                ws.send(JSON.stringify({
+                    type: 'auth',
+                    code: accessCode
+                }));
+            };
+            
+            ws.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'heart_rate') {
+                        updateHeartRate(data.current);
+                    }
+                } catch (e) {
+                    console.error('数据解析错误:', e);
+                }
+            };
+            
+            ws.onclose = function() {
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket错误:', error);
+            };
+        }
+        
+        function updateHeartRate(current) {
+            const rateElement = document.getElementById('currentRate');
+            const heartIcon = document.querySelector('.heart-icon i');
+            
+            if (rateElement) {
+                rateElement.textContent = current !== undefined ? current : '--';
+            }
+            
+            if (heartIcon && current !== '--' && !isNaN(current)) {
+                const rate = parseInt(current);
+                const duration = Math.max(0.5, 2 - (rate - 60) / 100);
+                heartIcon.style.animationDuration = `${duration}s`;
+            }
+        }
+        
+        // 初始化连接
+        connectWebSocket();
+    </script>
+</body>
+</html>
