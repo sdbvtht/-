@@ -4,7 +4,7 @@
 • 开发语言：Python 3.14 
 • WebSocket 端口：6667 
 • Web 服务端口：20888 
-• 系统要求：Windows 10/11 
+• 系统要求：Windows 10/11  
 
 手机版APP来自BILIBILI-zj1d
 
